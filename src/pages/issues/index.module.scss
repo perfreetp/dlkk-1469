@@ -163,6 +163,14 @@
 .orgName {
   font-size: $font-size-sm;
   color: $color-text-secondary;
+  margin-bottom: $spacing-xs;
+  padding-left: $spacing-sm;
+  @include text-ellipsis;
+}
+
+.issueLocation {
+  font-size: $font-size-sm;
+  color: $color-primary;
   margin-bottom: $spacing-sm;
   padding-left: $spacing-sm;
   @include text-ellipsis;

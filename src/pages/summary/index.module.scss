@@ -6,7 +6,7 @@
   padding-bottom: 160rpx;
 }
 
-.header {
+.header, .resultHeader {
   background: linear-gradient(135deg, $color-success 0%, #23c349 100%);
   padding: $spacing-xl $page-padding;
   color: $color-text-white;
@@ -14,12 +14,20 @@
   position: relative;
   overflow: hidden;
 
+  &.success {
+    background: linear-gradient(135deg, $color-success 0%, #23c349 100%);
+  }
+
   &.warning {
     background: linear-gradient(135deg, $color-warning 0%, #ff9a3c 100%);
   }
 
   &.error {
     background: linear-gradient(135deg, $color-error 0%, #ff6b6b 100%);
+  }
+
+  &.pending {
+    background: linear-gradient(135deg, #165DFF 0%, #4080FF 100%);
   }
 
   &::before {

@@ -3,7 +3,7 @@ import { View, Text, ScrollView } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import classnames from 'classnames'
 import StatusTag from '@/components/StatusTag'
-import { useAppStore } from '@/store'
+import { useAllIssues } from '@/store'
 import { IssueItem } from '@/types'
 import styles from './index.module.scss'
 
@@ -19,9 +19,7 @@ const filterOptions: { key: FilterType; label: string }[] = [
 
 const IssuesPage: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<FilterType>('all')
-  const { getAllIssues } = useAppStore()
-
-  const allIssues = useMemo(() => getAllIssues(), [getAllIssues])
+  const allIssues = useAllIssues()
 
   const stats = useMemo(() => {
     return {
@@ -42,7 +40,10 @@ const IssuesPage: React.FC = () => {
   }
 
   const handleIssueClick = (issue: IssueItem) => {
-    console.log('[Issues] Click issue:', issue.id)
+    Taro.showToast({
+      title: `${issue.itemName}`,
+      icon: 'none'
+    })
   }
 
   return (
@@ -50,7 +51,7 @@ const IssuesPage: React.FC = () => {
       <View className={styles.header}>
         <Text className={styles.headerTitle}>问题清单</Text>
         <Text className={styles.headerSubtitle}>共 {allIssues.length} 条待处理问题</Text>
-        
+
         <View className={styles.statRow}>
           <View className={styles.statItem}>
             <Text className={styles.statNumber}>{stats.pending}</Text>
@@ -72,8 +73,8 @@ const IssuesPage: React.FC = () => {
       </View>
 
       <View className={styles.content}>
-        <ScrollView 
-          scrollX 
+        <ScrollView
+          scrollX
           className={styles.filterBar}
           showScrollbar={false}
         >
@@ -88,33 +89,39 @@ const IssuesPage: React.FC = () => {
           ))}
         </ScrollView>
 
-        <ScrollView 
-          scrollY 
+        <ScrollView
+          scrollY
           className={styles.issueList}
           style={{ height: 'calc(100vh - 420rpx)' }}
         >
           {filteredIssues.length > 0 ? (
             filteredIssues.map(issue => (
-              <View 
-                key={issue.id} 
+              <View
+                key={issue.id}
                 className={styles.issueCard}
                 onClick={() => handleIssueClick(issue)}
               >
                 <View className={classnames(styles.severityBar, styles[issue.severity])} />
-                
+
                 <View className={styles.cardHeader}>
                   <Text className={styles.issueTitle}>{issue.itemName}</Text>
                   <StatusTag status={issue.severity} size="sm" />
                 </View>
 
-                <Text className={styles.orgName}>{issue.orgName}</Text>
+                <Text className={styles.orgName}>
+                  🏥 {issue.orgName}
+                </Text>
+
+                <Text className={styles.issueLocation}>
+                  📍 {issue.location}
+                </Text>
 
                 <Text className={styles.issueDesc}>{issue.description}</Text>
 
                 <View className={styles.cardFooter}>
                   <View className={styles.deadline}>
                     <Text className={styles.deadlineIcon}>⏰</Text>
-                    <Text className={classnames(styles.deadlineText)}>
+                    <Text className={styles.deadlineText}>
                       整改期限：{issue.rectifyDeadline}
                     </Text>
                   </View>

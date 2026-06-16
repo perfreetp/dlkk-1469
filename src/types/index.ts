@@ -47,6 +47,7 @@ export interface IssueItem {
   taskId: string
   orgName: string
   itemName: string
+  location: string
   description: string
   photoUrl: string
   severity: 'major' | 'minor'

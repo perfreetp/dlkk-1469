@@ -10,6 +10,7 @@ export type StatusType =
   | 'pass' 
   | 'fail' 
   | 'rectify'
+  | 'rectifying'
   | 'major'
   | 'minor'
   | 'verified'
@@ -28,6 +29,7 @@ const statusMap: Record<StatusType, { label: string; className: string }> = {
   pass: { label: '通过', className: 'pass' },
   fail: { label: '不通过', className: 'fail' },
   rectify: { label: '待整改', className: 'rectify' },
+  rectifying: { label: '整改中', className: 'rectify' },
   major: { label: '重大', className: 'major' },
   minor: { label: '一般', className: 'minor' },
   verified: { label: '已复核', className: 'verified' },

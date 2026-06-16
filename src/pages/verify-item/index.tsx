@@ -1,40 +1,28 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useEffect } from 'react'
 import { View, Text, Image, Button, Textarea, ScrollView, Input } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import classnames from 'classnames'
 import dayjs from 'dayjs'
-import { useAppStore } from '@/store'
+import { useVerifyItem, useAppStore } from '@/store'
 import styles from './index.module.scss'
 
 const VerifyItemPage: React.FC = () => {
   const router = useRouter()
   const itemId = router.params.id || 'item001'
   const taskId = router.params.taskId || 'task001'
-  
-  const { 
-    getTaskVerifyData, 
-    updateCheckPoint, 
-    updateVerifyItem,
-    addPhoto,
-    removePhoto,
-    addIssue,
-    tasks
-  } = useAppStore()
 
-  const verifyData = useMemo(() => getTaskVerifyData(taskId), [taskId, getTaskVerifyData])
-  
-  const item = useMemo(() => {
-    for (const category of verifyData.categories) {
-      const found = category.items.find(i => i.id === itemId)
-      if (found) return found
-    }
-    return undefined
-  }, [verifyData.categories, itemId])
+  const item = useVerifyItem(taskId, itemId)
+  const tasks = useAppStore(state => state.tasks)
+  const updateCheckPoint = useAppStore(state => state.updateCheckPoint)
+  const updateVerifyItem = useAppStore(state => state.updateVerifyItem)
+  const addPhoto = useAppStore(state => state.addPhoto)
+  const removePhoto = useAppStore(state => state.removePhoto)
+  const addIssue = useAppStore(state => state.addIssue)
 
-  const task = useMemo(() => tasks.find(t => t.id === taskId), [tasks, taskId])
+  const task = tasks.find(t => t.id === taskId)
 
-  const [remark, setRemark] = useState(item?.remark || '')
-  const [photos, setPhotos] = useState<string[]>(item?.photos || [])
+  const [remark, setRemark] = useState('')
+  const [photos, setPhotos] = useState<string[]>([])
   const [showRectifyModal, setShowRectifyModal] = useState(false)
   const [rectifyLocation, setRectifyLocation] = useState('')
   const [rectifyDeadline, setRectifyDeadline] = useState(
@@ -42,6 +30,23 @@ const VerifyItemPage: React.FC = () => {
   )
   const [rectifyDescription, setRectifyDescription] = useState('')
   const [rectifySeverity, setRectifySeverity] = useState<'major' | 'minor'>('minor')
+
+  useEffect(() => {
+    if (item) {
+      setRemark(item.remark || '')
+      setPhotos([...(item.photos || [])])
+    }
+  }, [item?.id, item?.remark, item?.photos?.length])
+
+  if (!item) {
+    return (
+      <View className={styles.page}>
+        <View style={{ padding: '120rpx 32rpx', textAlign: 'center' }}>
+          <Text>未找到核验项信息</Text>
+        </View>
+      </View>
+    )
+  }
 
   const handleCheckToggle = (checkPointId: string, checked: boolean) => {
     updateCheckPoint(taskId, itemId, checkPointId, checked)
@@ -56,24 +61,17 @@ const VerifyItemPage: React.FC = () => {
         res.tempFilePaths.forEach(photo => {
           addPhoto(taskId, itemId, photo)
         })
-        setPhotos([...photos, ...res.tempFilePaths].slice(0, 9))
-        console.log('[VerifyItem] 新增照片:', res.tempFilePaths.length, '张')
-      },
-      fail: (err) => {
-        console.error('[VerifyItem] 选择图片失败:', err)
+        setPhotos(prev => [...prev, ...res.tempFilePaths].slice(0, 9))
       }
     })
   }
 
   const handleDeletePhoto = (index: number) => {
     removePhoto(taskId, itemId, index)
-    const newPhotos = photos.filter((_, i) => i !== index)
-    setPhotos(newPhotos)
+    setPhotos(prev => prev.filter((_, i) => i !== index))
   }
 
   const handleSubmitResult = (result: 'pass' | 'fail' | 'rectify') => {
-    if (!item) return
-
     if (result === 'rectify') {
       setShowRectifyModal(true)
       return
@@ -97,37 +95,26 @@ const VerifyItemPage: React.FC = () => {
             remark,
             photos
           })
-          
-          console.log('[VerifyItem] 提交核验结果:', result)
           Taro.showToast({
             title: '提交成功',
             icon: 'success',
-            duration: 1500
+            duration: 1200
           })
           setTimeout(() => {
             Taro.navigateBack()
-          }, 1500)
+          }, 1200)
         }
       }
     })
   }
 
   const handleSaveRectify = () => {
-    if (!item) return
-    
     if (!rectifyLocation.trim()) {
-      Taro.showToast({
-        title: '请填写问题位置',
-        icon: 'none'
-      })
+      Taro.showToast({ title: '请填写问题位置', icon: 'none' })
       return
     }
-    
     if (!rectifyDescription.trim()) {
-      Taro.showToast({
-        title: '请填写整改说明',
-        icon: 'none'
-      })
+      Taro.showToast({ title: '请填写整改说明', icon: 'none' })
       return
     }
 
@@ -135,6 +122,7 @@ const VerifyItemPage: React.FC = () => {
       taskId,
       orgName: task?.orgName || '',
       itemName: item.name,
+      location: rectifyLocation,
       description: rectifyDescription,
       photoUrl: photos[0] || '',
       severity: rectifySeverity,
@@ -153,23 +141,15 @@ const VerifyItemPage: React.FC = () => {
     Taro.showToast({
       title: '提交成功',
       icon: 'success',
-      duration: 1500
+      duration: 1200
     })
-    
     setTimeout(() => {
       Taro.navigateBack()
-    }, 1500)
+    }, 1200)
   }
 
-  if (!item) {
-    return (
-      <View className={styles.page}>
-        <View style={{ padding: '120rpx 32rpx', textAlign: 'center' }}>
-          <Text>未找到核验项信息</Text>
-        </View>
-      </View>
-    )
-  }
+  const checkedCount = item.checkPoints.filter(cp => cp.checked).length
+  const totalCount = item.checkPoints.length
 
   return (
     <View className={styles.page}>
@@ -180,8 +160,8 @@ const VerifyItemPage: React.FC = () => {
         </View>
       </View>
 
-      <ScrollView 
-        scrollY 
+      <ScrollView
+        scrollY
         className={styles.content}
         style={{ height: 'calc(100vh - 180rpx - 180rpx)' }}
       >
@@ -209,13 +189,13 @@ const VerifyItemPage: React.FC = () => {
             <Text className={styles.titleIcon}>✅</Text>
             检查要点
             <Text style={{ fontSize: 24, color: '#86909c', marginLeft: 'auto', fontWeight: 'normal' }}>
-              {item.checkPoints.filter(cp => cp.checked).length}/{item.checkPoints.length}
+              {checkedCount}/{totalCount}
             </Text>
           </Text>
           <View className={styles.checkList}>
             {item.checkPoints.map(cp => (
-              <View 
-                key={cp.id} 
+              <View
+                key={cp.id}
                 className={styles.checkItem}
                 onClick={() => handleCheckToggle(cp.id, !cp.checked)}
               >
@@ -237,10 +217,10 @@ const VerifyItemPage: React.FC = () => {
           </Text>
           <View className={styles.photoGrid}>
             {photos.map((photo, index) => (
-              <View key={index} className={styles.photoItem}>
-                <Image 
+              <View key={`${photo}-${index}`} className={styles.photoItem}>
+                <Image
                   className={styles.photoImg}
-                  src={photo} 
+                  src={photo}
                   mode="aspectFill"
                   onClick={() => {
                     Taro.previewImage({
@@ -249,7 +229,7 @@ const VerifyItemPage: React.FC = () => {
                     })
                   }}
                 />
-                <View 
+                <View
                   className={styles.photoDelete}
                   onClick={(e) => {
                     e.stopPropagation()
@@ -285,19 +265,19 @@ const VerifyItemPage: React.FC = () => {
       </ScrollView>
 
       <View className={styles.bottomBar}>
-        <Button 
+        <Button
           className={`${styles.btn} ${styles.btnSuccess}`}
           onClick={() => handleSubmitResult('pass')}
         >
           通过
         </Button>
-        <Button 
+        <Button
           className={`${styles.btn} ${styles.btnWarning}`}
           onClick={() => handleSubmitResult('rectify')}
         >
           需整改
         </Button>
-        <Button 
+        <Button
           className={`${styles.btn} ${styles.btnDanger}`}
           onClick={() => handleSubmitResult('fail')}
         >
@@ -320,7 +300,7 @@ const VerifyItemPage: React.FC = () => {
                 <Text className={styles.formLabel}>问题位置</Text>
                 <Input
                   className={styles.formInput}
-                  placeholder="请输入问题具体位置"
+                  placeholder="请输入问题具体位置，如：二楼西侧走廊"
                   value={rectifyLocation}
                   onInput={(e) => setRectifyLocation(e.detail.value)}
                   maxlength={100}
@@ -330,13 +310,13 @@ const VerifyItemPage: React.FC = () => {
               <View className={styles.formItem}>
                 <Text className={styles.formLabel}>严重程度</Text>
                 <View className={styles.severityRow}>
-                  <View 
+                  <View
                     className={classnames(styles.severityOption, rectifySeverity === 'minor' && styles.active)}
                     onClick={() => setRectifySeverity('minor')}
                   >
                     <Text>一般问题</Text>
                   </View>
-                  <View 
+                  <View
                     className={classnames(styles.severityOption, rectifySeverity === 'major' && styles.activeMajor)}
                     onClick={() => setRectifySeverity('major')}
                   >
@@ -368,13 +348,13 @@ const VerifyItemPage: React.FC = () => {
             </ScrollView>
 
             <View className={styles.modalFooter}>
-              <Button 
+              <Button
                 className={`${styles.modalBtn} ${styles.modalBtnOutline}`}
                 onClick={() => setShowRectifyModal(false)}
               >
                 取消
               </Button>
-              <Button 
+              <Button
                 className={`${styles.modalBtn} ${styles.modalBtnPrimary}`}
                 onClick={handleSaveRectify}
               >

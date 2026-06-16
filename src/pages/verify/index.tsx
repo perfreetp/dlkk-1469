@@ -4,22 +4,25 @@ import Taro from '@tarojs/taro'
 import classnames from 'classnames'
 import VerifyCategoryCard from '@/components/VerifyCategoryCard'
 import CheckItem from '@/components/CheckItem'
-import { useAppStore } from '@/store'
+import { useCurrentTask, useTaskCategories, useAppStore } from '@/store'
 import styles from './index.module.scss'
 
 const VerifyPage: React.FC = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null)
-  const { currentTaskId, tasks, getTaskVerifyData } = useAppStore()
-  
+  const currentTask = useCurrentTask()
+  const currentTaskId = useAppStore(state => state.currentTaskId)
+  const categories = useTaskCategories(currentTaskId || '')
+
   const taskId = currentTaskId || 'task001'
-  const currentTask = useMemo(() => tasks.find(t => t.id === taskId), [tasks, taskId])
-  const verifyData = useMemo(() => getTaskVerifyData(taskId), [taskId, getTaskVerifyData])
-  const categories = verifyData.categories
 
   const overallProgress = useMemo(() => {
     const total = categories.reduce((sum, cat) => sum + cat.total, 0)
     const completed = categories.reduce((sum, cat) => sum + cat.completed, 0)
-    return { total, completed, percent: total > 0 ? Math.round((completed / total) * 100) : 0 }
+    return {
+      total,
+      completed,
+      percent: total > 0 ? Math.round((completed / total) * 100) : 0
+    }
   }, [categories])
 
   const isAllCompleted = overallProgress.total > 0 && overallProgress.completed === overallProgress.total
@@ -59,10 +62,11 @@ const VerifyPage: React.FC = () => {
   if (!currentTask) {
     return (
       <View className={styles.page}>
-        <View className={styles.emptyState}>
-          <Text className={styles.emptyIcon}>🏥</Text>
-          <Text className={styles.emptyTitle}>暂无进行中的核验任务</Text>
-          <Text className={styles.emptyDesc}>请先在"任务"页面选择一个任务开始核验</Text>
+        <View className={styles.header}>
+          <Text className={styles.headerTitle}>现场核验</Text>
+        </View>
+        <View style={{ padding: '120rpx 32rpx', textAlign: 'center' }}>
+          <Text style={{ color: '#86909c', fontSize: 28 }}>请先从「任务列表」选择机构并开始核验</Text>
         </View>
       </View>
     )
@@ -70,33 +74,48 @@ const VerifyPage: React.FC = () => {
 
   return (
     <View className={styles.page}>
-      <View className={styles.currentOrg}>
-        <View className={styles.orgHeader}>
-          <Text className={styles.orgName}>{currentTask.orgName}</Text>
-          <View className={styles.orgType}>
-            <Text>{currentTask.orgType}</Text>
+      <View className={styles.header}>
+        <Text className={styles.headerTitle}>现场核验</Text>
+
+        <View className={styles.orgInfo}>
+          <View className={styles.orgInfoLeft}>
+            <Text className={styles.orgName}>{currentTask.orgName}</Text>
+            <View className={styles.orgMeta}>
+              <Text className={styles.metaIcon}>📍</Text>
+              <Text className={styles.metaText}>{currentTask.orgAddress}</Text>
+            </View>
+            <View className={styles.orgMeta}>
+              <Text className={styles.metaIcon}>⏰</Text>
+              <Text className={styles.metaText}>预约时间：{currentTask.appointmentTime}</Text>
+            </View>
           </View>
         </View>
+
         <View className={styles.progressSection}>
-          <View className={styles.progressLabel}>
-            <Text>核验进度</Text>
-            <Text>{overallProgress.completed}/{overallProgress.total} 项 ({overallProgress.percent}%)</Text>
+          <View className={styles.progressHeader}>
+            <Text className={styles.progressLabel}>核验总进度</Text>
+            <Text className={styles.progressPercent}>{overallProgress.percent}%</Text>
           </View>
-          <View className={styles.progressBar}>
-            <View 
-              className={styles.progressFill} 
+          <View className={styles.progressBarOuter}>
+            <View
+              className={styles.progressBarInner}
               style={{ width: `${overallProgress.percent}%` }}
             />
+          </View>
+          <View className={styles.progressDetail}>
+            <Text className={styles.detailText}>
+              已完成 {overallProgress.completed} / {overallProgress.total} 项
+            </Text>
           </View>
         </View>
       </View>
 
-      <ScrollView 
-        scrollY 
-        className={styles.content}
-        style={{ height: 'calc(100vh - 320rpx - 160rpx)' }}
-      >
-        <View className={styles.categoryList}>
+      <View className={styles.content}>
+        <ScrollView
+          scrollY
+          className={styles.categoryList}
+          style={{ height: 'calc(100vh - 560rpx - 160rpx)' }}
+        >
           {categories.map(category => (
             <View key={category.id}>
               <VerifyCategoryCard
@@ -108,9 +127,9 @@ const VerifyPage: React.FC = () => {
                 <View className={styles.expandedSection}>
                   <Text className={styles.sectionTitle}>检查项目</Text>
                   {category.items.map(item => (
-                    <CheckItem 
-                      key={item.id} 
-                      item={item} 
+                    <CheckItem
+                      key={item.id}
+                      item={item}
                       onClick={() => {
                         Taro.navigateTo({
                           url: `/pages/verify-item/index?id=${item.id}&taskId=${taskId}`
@@ -122,24 +141,21 @@ const VerifyPage: React.FC = () => {
               )}
             </View>
           ))}
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </View>
 
       <View className={styles.bottomBar}>
-        <Button 
-          className={classnames(styles.btn, styles.btnOutline)}
+        <Button
+          className={`${styles.btn} ${styles.btnOutline}`}
           onClick={handleViewSummary}
         >
           查看摘要
         </Button>
-        <Button 
-          className={classnames(
-            styles.btn, 
-            isAllCompleted ? styles.btnPrimary : styles.btnDisabled
-          )}
+        <Button
+          className={classnames(styles.btn, styles.btnPrimary)}
           onClick={handleSubmit}
         >
-          {isAllCompleted ? '提交核验' : `还差 ${overallProgress.total - overallProgress.completed} 项`}
+          提交核验
         </Button>
       </View>
     </View>

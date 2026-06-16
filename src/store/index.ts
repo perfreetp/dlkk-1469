@@ -14,9 +14,8 @@ interface AppState {
   currentTaskId: string | null
   tasks: Task[]
   taskVerifyData: Record<string, TaskVerifyData>
+
   setCurrentTaskId: (taskId: string | null) => void
-  getCurrentTask: () => Task | undefined
-  getTaskVerifyData: (taskId: string) => TaskVerifyData
   updateVerifyItem: (taskId: string, itemId: string, updates: Partial<VerifyItem>) => void
   updateCheckPoint: (taskId: string, itemId: string, checkPointId: string, checked: boolean) => void
   addPhoto: (taskId: string, itemId: string, photo: string) => void
@@ -24,80 +23,57 @@ interface AppState {
   addIssue: (taskId: string, issue: Omit<IssueItem, 'id' | 'createdAt' | 'handler'>) => void
   updateIssueStatus: (issueId: string, status: IssueItem['status']) => void
   updateTaskStatus: (taskId: string, status: Task['status']) => void
-  getAllIssues: () => IssueItem[]
-  getIssuesByTaskId: (taskId: string) => IssueItem[]
   resetTaskVerifyData: (taskId: string) => void
 }
 
-const initializeTaskVerifyData = (): Record<string, TaskVerifyData> => {
+const initData = (): Record<string, TaskVerifyData> => {
   const data: Record<string, TaskVerifyData> = {}
   taskList.forEach(task => {
+    const taskIssues = issueList
+      .filter(issue => issue.taskId === task.id)
+      .map(issue => ({ ...issue, location: issue.location || '现场核查' }))
     data[task.id] = {
       categories: JSON.parse(JSON.stringify(defaultCategories)),
-      issues: issueList.filter(issue => issue.taskId === task.id)
+      issues: taskIssues
     }
   })
   return data
 }
 
+const recalcCategoryProgress = (categories: VerifyCategory[]) => {
+  return categories.map(category => ({
+    ...category,
+    completed: category.items.filter(item => item.status !== 'pending').length,
+    total: category.items.length
+  }))
+}
+
 export const useAppStore = create<AppState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       currentTaskId: null,
       tasks: [...taskList],
-      taskVerifyData: initializeTaskVerifyData(),
+      taskVerifyData: initData(),
 
       setCurrentTaskId: (taskId) => set({ currentTaskId: taskId }),
-
-      getCurrentTask: () => {
-        const { currentTaskId, tasks } = get()
-        return tasks.find(t => t.id === currentTaskId)
-      },
-
-      getTaskVerifyData: (taskId) => {
-        const { taskVerifyData } = get()
-        if (!taskVerifyData[taskId]) {
-          const newData: TaskVerifyData = {
-            categories: JSON.parse(JSON.stringify(defaultCategories)),
-            issues: issueList.filter(issue => issue.taskId === taskId)
-          }
-          set(state => ({
-            taskVerifyData: {
-              ...state.taskVerifyData,
-              [taskId]: newData
-            }
-          }))
-          return newData
-        }
-        return taskVerifyData[taskId]
-      },
 
       updateVerifyItem: (taskId, itemId, updates) => set(state => {
         const taskData = state.taskVerifyData[taskId]
         if (!taskData) return state
 
-        const newCategories = taskData.categories.map(category => ({
-          ...category,
-          items: category.items.map(item => {
-            if (item.id === itemId) {
-              return { ...item, ...updates }
-            }
-            return item
-          })
-        }))
-
-        const updatedCategories = newCategories.map(category => {
-          const completed = category.items.filter(item => item.status !== 'pending').length
-          return { ...category, completed, total: category.items.length }
-        })
+        const newCategories = recalcCategoryProgress(
+          taskData.categories.map(category => ({
+            ...category,
+            items: category.items.map(item =>
+              item.id === itemId ? { ...item, ...updates } : item
+            )
+          }))
+        )
 
         return {
           taskVerifyData: {
             ...state.taskVerifyData,
-            [taskId]: {
-              ...taskData,
-              categories: updatedCategories
-            }
+            [taskId]: { ...taskData, categories: newCategories }
           }
         }
       }),
@@ -109,30 +85,22 @@ export const useAppStore = create<AppState>()(
         const newCategories = taskData.categories.map(category => ({
           ...category,
           items: category.items.map(item => {
-            if (item.id === itemId) {
-              const newCheckPoints = item.checkPoints.map(cp => {
-                if (cp.id === checkPointId) {
-                  return {
-                    ...cp,
-                    checked,
-                    result: (checked ? 'pass' : 'na') as 'pass' | 'fail' | 'na'
-                  }
-                }
-                return cp
-              })
-              return { ...item, checkPoints: newCheckPoints }
+            if (item.id !== itemId) return item
+            return {
+              ...item,
+              checkPoints: item.checkPoints.map(cp =>
+                cp.id === checkPointId
+                  ? { ...cp, checked, result: checked ? 'pass' : 'na' as const }
+                  : cp
+              )
             }
-            return item
           })
         }))
 
         return {
           taskVerifyData: {
             ...state.taskVerifyData,
-            [taskId]: {
-              ...taskData,
-              categories: newCategories
-            }
+            [taskId]: { ...taskData, categories: newCategories }
           }
         }
       }),
@@ -144,21 +112,16 @@ export const useAppStore = create<AppState>()(
         const newCategories = taskData.categories.map(category => ({
           ...category,
           items: category.items.map(item => {
-            if (item.id === itemId) {
-              const newPhotos = [...item.photos, photo].slice(0, 9)
-              return { ...item, photos: newPhotos }
-            }
-            return item
+            if (item.id !== itemId) return item
+            const newPhotos = [...item.photos, photo].slice(0, 9)
+            return { ...item, photos: newPhotos }
           })
         }))
 
         return {
           taskVerifyData: {
             ...state.taskVerifyData,
-            [taskId]: {
-              ...taskData,
-              categories: newCategories
-            }
+            [taskId]: { ...taskData, categories: newCategories }
           }
         }
       }),
@@ -170,36 +133,28 @@ export const useAppStore = create<AppState>()(
         const newCategories = taskData.categories.map(category => ({
           ...category,
           items: category.items.map(item => {
-            if (item.id === itemId) {
-              const newPhotos = item.photos.filter((_, i) => i !== index)
-              return { ...item, photos: newPhotos }
-            }
-            return item
+            if (item.id !== itemId) return item
+            const newPhotos = item.photos.filter((_, i) => i !== index)
+            return { ...item, photos: newPhotos }
           })
         }))
 
         return {
           taskVerifyData: {
             ...state.taskVerifyData,
-            [taskId]: {
-              ...taskData,
-              categories: newCategories
-            }
+            [taskId]: { ...taskData, categories: newCategories }
           }
         }
       }),
 
       addIssue: (taskId, issue) => set(state => {
-        const taskData = state.taskVerifyData[taskId]
         const tasks = state.tasks
-        const task = tasks.find(t => t.id === taskId)
-        
         const newIssue: IssueItem = {
           ...issue,
           id: `issue_${Date.now()}`,
-          createdAt: new Date().toLocaleString('zh-CN', { 
-            year: 'numeric', 
-            month: '2-digit', 
+          createdAt: new Date().toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
             day: '2-digit',
             hour: '2-digit',
             minute: '2-digit'
@@ -207,16 +162,16 @@ export const useAppStore = create<AppState>()(
           handler: '李协管员'
         }
 
-        const newIssues = taskData 
-          ? [...taskData.issues, newIssue]
-          : [newIssue]
+        const updatedTasks = tasks.map(t =>
+          t.id === taskId && t.status === 'completed'
+            ? { ...t, status: 'rectify' as const }
+            : t
+        )
 
-        const updatedTasks = tasks.map(t => {
-          if (t.id === taskId && t.status === 'completed') {
-            return { ...t, status: 'rectify' as const }
-          }
-          return t
-        })
+        const taskData = state.taskVerifyData[taskId] || {
+          categories: JSON.parse(JSON.stringify(defaultCategories)),
+          issues: []
+        }
 
         return {
           tasks: updatedTasks,
@@ -224,8 +179,7 @@ export const useAppStore = create<AppState>()(
             ...state.taskVerifyData,
             [taskId]: {
               ...taskData,
-              categories: taskData?.categories || JSON.parse(JSON.stringify(defaultCategories)),
-              issues: newIssues
+              issues: [...taskData.issues, newIssue]
             }
           }
         }
@@ -233,61 +187,68 @@ export const useAppStore = create<AppState>()(
 
       updateIssueStatus: (issueId, status) => set(state => {
         const newTaskVerifyData = { ...state.taskVerifyData }
-        
         Object.keys(newTaskVerifyData).forEach(taskId => {
           newTaskVerifyData[taskId] = {
             ...newTaskVerifyData[taskId],
-            issues: newTaskVerifyData[taskId].issues.map(issue => {
-              if (issue.id === issueId) {
-                return { ...issue, status }
-              }
-              return issue
-            })
+            issues: newTaskVerifyData[taskId].issues.map(issue =>
+              issue.id === issueId ? { ...issue, status } : issue
+            )
           }
         })
-
         return { taskVerifyData: newTaskVerifyData }
       }),
 
-      updateTaskStatus: (taskId, status) => set(state => {
-        const newTasks = state.tasks.map(task => {
-          if (task.id === taskId) {
-            return { ...task, status }
-          }
-          return task
-        })
+      updateTaskStatus: (taskId, status) => set(state => ({
+        tasks: state.tasks.map(task =>
+          task.id === taskId ? { ...task, status } : task
+        )
+      })),
 
-        return { tasks: newTasks }
-      }),
-
-      getAllIssues: () => {
-        const { taskVerifyData } = get()
-        const allIssues: IssueItem[] = []
-        Object.values(taskVerifyData).forEach(data => {
-          allIssues.push(...data.issues)
-        })
-        return allIssues
-      },
-
-      getIssuesByTaskId: (taskId) => {
-        const { taskVerifyData } = get()
-        return taskVerifyData[taskId]?.issues || []
-      },
-
-      resetTaskVerifyData: (taskId) => set(state => {
-        return {
-          taskVerifyData: {
-            ...state.taskVerifyData,
-            [taskId]: {
-              categories: JSON.parse(JSON.stringify(defaultCategories)),
-              issues: issueList.filter(issue => issue.taskId === taskId)
-            }
+      resetTaskVerifyData: (taskId) => set(state => ({
+        taskVerifyData: {
+          ...state.taskVerifyData,
+          [taskId]: {
+            categories: JSON.parse(JSON.stringify(defaultCategories)),
+            issues: issueList
+              .filter(issue => issue.taskId === taskId)
+              .map(issue => ({ ...issue, location: issue.location || '现场核查' }))
           }
         }
-      })
+      }))
     }),
     {
-      name: 'medical-verify-storage'
+      name: 'medical-verify-storage-v2'
     }
   )
 )
+
+export const useCurrentTask = () =>
+  useAppStore(state => {
+    if (!state.currentTaskId) return undefined
+    return state.tasks.find(t => t.id === state.currentTaskId)
+  })
+
+export const useTaskCategories = (taskId: string) =>
+  useAppStore(state => state.taskVerifyData[taskId]?.categories || [])
+
+export const useTaskIssues = (taskId: string) =>
+  useAppStore(state => state.taskVerifyData[taskId]?.issues || [])
+
+export const useAllIssues = () =>
+  useAppStore(state => {
+    const all: IssueItem[] = []
+    Object.values(state.taskVerifyData).forEach(data => {
+      all.push(...data.issues)
+    })
+    return all
+  })
+
+export const useVerifyItem = (taskId: string, itemId: string) =>
+  useAppStore(state => {
+    const categories = state.taskVerifyData[taskId]?.categories || []
+    for (const cat of categories) {
+      const item = cat.items.find(i => i.id === itemId)
+      if (item) return item
+    }
+    return undefined
+  })

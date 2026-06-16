@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react'
 import { View, Text, Input, Button } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import classnames from 'classnames'
+import StatusTag from '@/components/StatusTag'
 import { useTaskCategories, useTaskIssues, useAppStore } from '@/store'
 import styles from './index.module.scss'
 

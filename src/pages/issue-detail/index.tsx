@@ -20,7 +20,6 @@ const IssueDetailPage: React.FC = () => {
 
   const taskVerifyData = useAppStore(state => state.taskVerifyData)
   const updateIssue = useAppStore(state => state.updateIssue)
-  const updateIssueStatus = useAppStore(state => state.updateIssueStatus)
 
   const issue = (() => {
     for (const data of Object.values(taskVerifyData)) {

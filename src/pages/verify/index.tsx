@@ -1,23 +1,20 @@
 import React, { useState, useMemo } from 'react'
 import { View, Text, ScrollView, Button } from '@tarojs/components'
-import Taro, { useRouter } from '@tarojs/taro'
+import Taro from '@tarojs/taro'
 import classnames from 'classnames'
 import VerifyCategoryCard from '@/components/VerifyCategoryCard'
 import CheckItem from '@/components/CheckItem'
-import StatusTag from '@/components/StatusTag'
-import { verifyCategories } from '@/data/verify-items'
-import { getTaskById } from '@/data/tasks'
-import { VerifyCategory, VerifyItem } from '@/types'
+import { useAppStore } from '@/store'
 import styles from './index.module.scss'
 
 const VerifyPage: React.FC = () => {
-  const router = useRouter()
-  const taskId = router.params.id || 'task001'
-  
   const [expandedId, setExpandedId] = useState<string | null>(null)
-  const [categories, setCategories] = useState<VerifyCategory[]>(verifyCategories)
-
-  const currentTask = useMemo(() => getTaskById(taskId), [taskId])
+  const { currentTaskId, tasks, getTaskVerifyData } = useAppStore()
+  
+  const taskId = currentTaskId || 'task001'
+  const currentTask = useMemo(() => tasks.find(t => t.id === taskId), [tasks, taskId])
+  const verifyData = useMemo(() => getTaskVerifyData(taskId), [taskId, getTaskVerifyData])
+  const categories = verifyData.categories
 
   const overallProgress = useMemo(() => {
     const total = categories.reduce((sum, cat) => sum + cat.total, 0)
@@ -110,8 +107,16 @@ const VerifyPage: React.FC = () => {
               {expandedId === category.id && (
                 <View className={styles.expandedSection}>
                   <Text className={styles.sectionTitle}>检查项目</Text>
-                  {category.items.map((item: VerifyItem) => (
-                    <CheckItem key={item.id} item={item} />
+                  {category.items.map(item => (
+                    <CheckItem 
+                      key={item.id} 
+                      item={item} 
+                      onClick={() => {
+                        Taro.navigateTo({
+                          url: `/pages/verify-item/index?id=${item.id}&taskId=${taskId}`
+                        })
+                      }}
+                    />
                   ))}
                 </View>
               )}

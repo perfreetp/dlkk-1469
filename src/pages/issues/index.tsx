@@ -3,7 +3,7 @@ import { View, Text, ScrollView } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import classnames from 'classnames'
 import StatusTag from '@/components/StatusTag'
-import { issueList } from '@/data/issues'
+import { useAppStore } from '@/store'
 import { IssueItem } from '@/types'
 import styles from './index.module.scss'
 
@@ -19,20 +19,23 @@ const filterOptions: { key: FilterType; label: string }[] = [
 
 const IssuesPage: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<FilterType>('all')
+  const { getAllIssues } = useAppStore()
+
+  const allIssues = useMemo(() => getAllIssues(), [getAllIssues])
 
   const stats = useMemo(() => {
     return {
-      pending: issueList.filter(i => i.status === 'pending').length,
-      rectifying: issueList.filter(i => i.status === 'rectifying').length,
-      verified: issueList.filter(i => i.status === 'verified').length,
-      closed: issueList.filter(i => i.status === 'closed').length
+      pending: allIssues.filter(i => i.status === 'pending').length,
+      rectifying: allIssues.filter(i => i.status === 'rectifying').length,
+      verified: allIssues.filter(i => i.status === 'verified').length,
+      closed: allIssues.filter(i => i.status === 'closed').length
     }
-  }, [])
+  }, [allIssues])
 
   const filteredIssues = useMemo(() => {
-    if (activeFilter === 'all') return issueList
-    return issueList.filter(issue => issue.status === activeFilter)
-  }, [activeFilter])
+    if (activeFilter === 'all') return allIssues
+    return allIssues.filter(issue => issue.status === activeFilter)
+  }, [allIssues, activeFilter])
 
   const handleFilterChange = (key: FilterType) => {
     setActiveFilter(key)
@@ -46,7 +49,7 @@ const IssuesPage: React.FC = () => {
     <View className={styles.page}>
       <View className={styles.header}>
         <Text className={styles.headerTitle}>问题清单</Text>
-        <Text className={styles.headerSubtitle}>共 {issueList.length} 条待处理问题</Text>
+        <Text className={styles.headerSubtitle}>共 {allIssues.length} 条待处理问题</Text>
         
         <View className={styles.statRow}>
           <View className={styles.statItem}>
@@ -101,7 +104,7 @@ const IssuesPage: React.FC = () => {
                 
                 <View className={styles.cardHeader}>
                   <Text className={styles.issueTitle}>{issue.itemName}</Text>
-                  <StatusTag status={issue.severity as any} size="sm" />
+                  <StatusTag status={issue.severity} size="sm" />
                 </View>
 
                 <Text className={styles.orgName}>{issue.orgName}</Text>
@@ -115,7 +118,7 @@ const IssuesPage: React.FC = () => {
                       整改期限：{issue.rectifyDeadline}
                     </Text>
                   </View>
-                  <StatusTag status={issue.status as any} size="sm" />
+                  <StatusTag status={issue.status} size="sm" />
                 </View>
               </View>
             ))

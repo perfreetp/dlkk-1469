@@ -2,29 +2,39 @@ import React, { useState, useMemo } from 'react'
 import { View, Text, Input, Button } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import classnames from 'classnames'
-import { getTaskById } from '@/data/tasks'
-import { getIssuesByTaskId } from '@/data/issues'
+import { useAppStore } from '@/store'
 import styles from './index.module.scss'
 
 const SignaturePage: React.FC = () => {
   const router = useRouter()
   const taskId = router.params.taskId || 'task001'
+  const { tasks, getTaskVerifyData, updateTaskStatus, setCurrentTaskId } = useAppStore()
 
-  const task = useMemo(() => getTaskById(taskId), [taskId])
-  const issues = useMemo(() => getIssuesByTaskId(taskId), [taskId])
+  const task = useMemo(() => tasks.find(t => t.id === taskId), [tasks, taskId])
+  const verifyData = useMemo(() => getTaskVerifyData(taskId), [taskId, getTaskVerifyData])
+  const issues = verifyData.issues
 
   const [signerName, setSignerName] = useState('')
   const [hasSigned, setHasSigned] = useState(false)
   const [signature, setSignature] = useState('')
 
   const stats = useMemo(() => {
-    return {
-      pass: 12,
-      rectify: 3,
-      fail: 2,
-      total: 17
-    }
-  }, [])
+    let pass = 0
+    let rectify = 0
+    let fail = 0
+    let total = 0
+
+    verifyData.categories.forEach(category => {
+      category.items.forEach(item => {
+        total++
+        if (item.status === 'pass') pass++
+        else if (item.status === 'rectify') rectify++
+        else if (item.status === 'fail') fail++
+      })
+    })
+
+    return { pass, rectify, fail, total }
+  }, [verifyData.categories])
 
   const canSubmit = signerName.trim().length > 0 && hasSigned
 
@@ -76,18 +86,37 @@ const SignaturePage: React.FC = () => {
         if (res.confirm) {
           console.log('[Signature] 提交电子签名确认')
           Taro.showLoading({ title: '提交中...' })
+          
+          const newStatus = stats.fail > 0 
+            ? 'rectify' 
+            : stats.rectify > 0 
+              ? 'rectify' 
+              : 'completed'
+          
+          updateTaskStatus(taskId, newStatus)
+          setCurrentTaskId(null)
+          
           setTimeout(() => {
             Taro.hideLoading()
+            
+            const statusText = {
+              completed: '核验通过',
+              rectify: '待整改',
+              pending: '待核验',
+              ongoing: '进行中'
+            }
+            
             Taro.showToast({
-              title: '提交成功',
+              title: `${statusText[newStatus]}`,
               icon: 'success',
-              duration: 1500
+              duration: 2000
             })
+            
             setTimeout(() => {
               Taro.switchTab({
                 url: '/pages/tasks/index'
               })
-            }, 1500)
+            }, 2000)
           }, 1500)
         }
       }

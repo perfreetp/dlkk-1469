@@ -3,8 +3,7 @@ import { View, Text, ScrollView } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import classnames from 'classnames'
 import TaskCard from '@/components/TaskCard'
-import { taskList, getTodayTasks } from '@/data/tasks'
-import { Task } from '@/types'
+import { useAppStore } from '@/store'
 import styles from './index.module.scss'
 
 type FilterType = 'all' | 'pending' | 'ongoing' | 'completed' | 'rectify'
@@ -20,8 +19,11 @@ const filterOptions: { key: FilterType; label: string }[] = [
 const TasksPage: React.FC = () => {
   const [activeFilter, setActiveFilter] = useState<FilterType>('all')
   const [today] = useState('2024年6月17日 星期一')
+  const { tasks } = useAppStore()
 
-  const todayTasks = useMemo(() => getTodayTasks(), [])
+  const todayTasks = useMemo(() => {
+    return tasks.filter(task => task.appointmentTime.startsWith('2024-06-17'))
+  }, [tasks])
 
   const stats = useMemo(() => {
     const all = todayTasks.length

@@ -3,26 +3,36 @@ import { View, Text, Button, ScrollView } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import classnames from 'classnames'
 import StatusTag from '@/components/StatusTag'
-import { getTaskById } from '@/data/tasks'
-import { verifyCategories } from '@/data/verify-items'
-import { getIssuesByTaskId } from '@/data/issues'
+import { useAppStore } from '@/store'
 import styles from './index.module.scss'
 
 const SummaryPage: React.FC = () => {
   const router = useRouter()
   const taskId = router.params.taskId || 'task001'
+  const { tasks, getTaskVerifyData } = useAppStore()
 
-  const task = useMemo(() => getTaskById(taskId), [taskId])
-  const issues = useMemo(() => getIssuesByTaskId(taskId), [taskId])
+  const task = useMemo(() => tasks.find(t => t.id === taskId), [tasks, taskId])
+  const verifyData = useMemo(() => getTaskVerifyData(taskId), [taskId, getTaskVerifyData])
+  const categories = verifyData.categories
+  const issues = verifyData.issues
 
   const stats = useMemo(() => {
-    const total = verifyCategories.reduce((sum, cat) => sum + cat.total, 0)
-    const completed = verifyCategories.reduce((sum, cat) => sum + cat.completed, 0)
-    const pass = 1
-    const rectify = 0
-    const fail = 0
+    let pass = 0
+    let rectify = 0
+    let fail = 0
+    const total = categories.reduce((sum, cat) => sum + cat.total, 0)
+    const completed = categories.reduce((sum, cat) => sum + cat.completed, 0)
+
+    categories.forEach(category => {
+      category.items.forEach(item => {
+        if (item.status === 'pass') pass++
+        else if (item.status === 'rectify') rectify++
+        else if (item.status === 'fail') fail++
+      })
+    })
+
     return { total, completed, pass, rectify, fail }
-  }, [])
+  }, [categories])
 
   const conclusion = useMemo(() => {
     if (stats.fail > 0) return { type: 'error', text: '核验不通过', icon: '❌' }
@@ -112,7 +122,7 @@ const SummaryPage: React.FC = () => {
             分类核验情况
           </Text>
           <View className={styles.categoryList}>
-            {verifyCategories.map(cat => (
+            {categories.map(cat => (
               <View key={cat.id} className={styles.categoryItem}>
                 <View className={styles.categoryIcon}>
                   <Text>{cat.icon}</Text>

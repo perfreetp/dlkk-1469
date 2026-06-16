@@ -2,16 +2,18 @@ import React, { useMemo } from 'react'
 import { View, Text, Image, Button, ScrollView } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import StatusTag from '@/components/StatusTag'
-import { getTaskById } from '@/data/tasks'
+import { useAppStore } from '@/store'
 import styles from './index.module.scss'
 
 const OrgDetailPage: React.FC = () => {
   const router = useRouter()
   const taskId = router.params.id || 'task001'
+  const { tasks, setCurrentTaskId } = useAppStore()
   
-  const task = useMemo(() => getTaskById(taskId), [taskId])
+  const task = useMemo(() => tasks.find(t => t.id === taskId), [tasks, taskId])
 
   const handleStartVerify = () => {
+    setCurrentTaskId(taskId)
     Taro.switchTab({
       url: '/pages/verify/index'
     })

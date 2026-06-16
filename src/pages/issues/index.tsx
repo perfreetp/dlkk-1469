@@ -40,9 +40,8 @@ const IssuesPage: React.FC = () => {
   }
 
   const handleIssueClick = (issue: IssueItem) => {
-    Taro.showToast({
-      title: `${issue.itemName}`,
-      icon: 'none'
+    Taro.navigateTo({
+      url: `/pages/issue-detail/index?id=${issue.id}`
     })
   }
 

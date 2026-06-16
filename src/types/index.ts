@@ -55,6 +55,8 @@ export interface IssueItem {
   status: 'pending' | 'rectifying' | 'verified' | 'closed'
   createdAt: string
   handler: string
+  rectifyPhotos?: string[]
+  rectifyNote?: string
 }
 
 export interface UserInfo {

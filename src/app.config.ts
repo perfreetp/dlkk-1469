@@ -7,7 +7,8 @@ export default defineAppConfig({
     'pages/org-detail/index',
     'pages/verify-item/index',
     'pages/signature/index',
-    'pages/summary/index'
+    'pages/summary/index',
+    'pages/issue-detail/index'
   ],
   window: {
     backgroundTextStyle: 'light',

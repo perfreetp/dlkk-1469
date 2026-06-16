@@ -118,6 +118,12 @@
   font-size: $font-size-sm;
   color: $color-text-primary;
   font-weight: $font-weight-medium;
+}
+
+.issueNameRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 4rpx;
 }
 

@@ -154,12 +154,23 @@ const SignaturePage: React.FC = () => {
             <Text className={styles.sectionTitle}>问题清单 ({issues.length})</Text>
             <View className={styles.issueList}>
               {issues.map((issue, index) => (
-                <View key={issue.id} className={styles.issueItem}>
+                <View
+                  key={issue.id}
+                  className={styles.issueItem}
+                  onClick={() => {
+                    Taro.navigateTo({
+                      url: `/pages/issue-detail/index?id=${issue.id}`
+                    })
+                  }}
+                >
                   <View className={classnames(styles.severityIndicator, styles[issue.severity])} />
                   <View className={styles.issueContent}>
-                    <Text className={styles.issueName}>
-                      {index + 1}. {issue.itemName}
-                    </Text>
+                    <View className={styles.issueNameRow}>
+                      <Text className={styles.issueName}>
+                        {index + 1}. {issue.itemName}
+                      </Text>
+                      <StatusTag status={issue.status} size="sm" />
+                    </View>
                     <Text className={styles.issueLocation}>📍 {issue.location}</Text>
                     <Text className={styles.issueDesc}>{issue.description}</Text>
                   </View>

@@ -3,7 +3,7 @@ import { View, Text, Button, ScrollView } from '@tarojs/components'
 import Taro, { useRouter } from '@tarojs/taro'
 import classnames from 'classnames'
 import StatusTag from '@/components/StatusTag'
-import { useTaskCategories, useTaskIssues, useAppStore } from '@/store'
+import { useTaskCategories, useTaskIssues, useAppStore, useAllIssues } from '@/store'
 import styles from './index.module.scss'
 
 const SummaryPage: React.FC = () => {
@@ -13,6 +13,7 @@ const SummaryPage: React.FC = () => {
   const tasks = useAppStore(state => state.tasks)
   const categories = useTaskCategories(taskId)
   const issues = useTaskIssues(taskId)
+  const allIssues = useAllIssues()
 
   const task = useMemo(() => tasks.find(t => t.id === taskId), [tasks, taskId])
 
@@ -43,6 +44,30 @@ const SummaryPage: React.FC = () => {
     return { type: 'success', text: '核验通过', icon: '✅' }
   }, [stats, issues.length])
 
+  const rectifyOverview = useMemo(() => {
+    const orgMap: Record<string, { orgName: string; pending: number; rectifying: number; closed: number; verified: number }> = {}
+    allIssues.forEach(issue => {
+      if (!orgMap[issue.taskId]) {
+        const t = tasks.find(t => t.id === issue.taskId)
+        orgMap[issue.taskId] = {
+          orgName: t?.orgName || issue.orgName,
+          pending: 0,
+          rectifying: 0,
+          closed: 0,
+          verified: 0
+        }
+      }
+      const bucket = orgMap[issue.taskId]
+      if (issue.status === 'pending') bucket.pending++
+      else if (issue.status === 'rectifying') bucket.rectifying++
+      else if (issue.status === 'verified') bucket.verified++
+      else if (issue.status === 'closed') bucket.closed++
+    })
+    return Object.entries(orgMap)
+      .filter(([, v]) => v.pending + v.rectifying + v.verified + v.closed > 0)
+      .map(([tid, v]) => ({ taskId: tid, ...v }))
+  }, [allIssues, tasks])
+
   const handleBack = () => {
     Taro.navigateBack()
   }
@@ -50,6 +75,12 @@ const SummaryPage: React.FC = () => {
   const handleSignature = () => {
     Taro.navigateTo({
       url: `/pages/signature/index?taskId=${taskId}`
+    })
+  }
+
+  const handleIssueClick = (issueId: string) => {
+    Taro.navigateTo({
+      url: `/pages/issue-detail/index?id=${issueId}`
     })
   }
 
@@ -139,6 +170,47 @@ const SummaryPage: React.FC = () => {
           </View>
         </View>
 
+        {rectifyOverview.length > 0 && (
+          <View className={styles.section}>
+            <Text className={styles.sectionTitle}>整改跟踪概览</Text>
+            <View className={styles.overviewList}>
+              {rectifyOverview.map(org => {
+                const unresolved = org.pending + org.rectifying
+                return (
+                  <View key={org.taskId} className={styles.overviewCard}>
+                    <View className={styles.overviewHeader}>
+                      <Text className={styles.overviewOrgName}>🏥 {org.orgName}</Text>
+                      {unresolved > 0 && (
+                        <View className={styles.unresolvedBadge}>
+                          <Text className={styles.unresolvedText}>{unresolved}项待处理</Text>
+                        </View>
+                      )}
+                    </View>
+                    <View className={styles.overviewStats}>
+                      <View className={classnames(styles.overviewStatItem, styles.ovPending)}>
+                        <Text className={styles.ovNumber}>{org.pending}</Text>
+                        <Text className={styles.ovLabel}>待整改</Text>
+                      </View>
+                      <View className={classnames(styles.overviewStatItem, styles.ovRectifying)}>
+                        <Text className={styles.ovNumber}>{org.rectifying}</Text>
+                        <Text className={styles.ovLabel}>整改中</Text>
+                      </View>
+                      <View className={classnames(styles.overviewStatItem, styles.ovVerified)}>
+                        <Text className={styles.ovNumber}>{org.verified}</Text>
+                        <Text className={styles.ovLabel}>已复核</Text>
+                      </View>
+                      <View className={classnames(styles.overviewStatItem, styles.ovClosed)}>
+                        <Text className={styles.ovNumber}>{org.closed}</Text>
+                        <Text className={styles.ovLabel}>已关闭</Text>
+                      </View>
+                    </View>
+                  </View>
+                )
+              })}
+            </View>
+          </View>
+        )}
+
         {issues.length > 0 && (
           <View className={styles.section}>
             <Text className={styles.sectionTitle}>
@@ -147,7 +219,11 @@ const SummaryPage: React.FC = () => {
             </Text>
             <View className={styles.issueList}>
               {issues.map((issue, index) => (
-                <View key={issue.id} className={styles.issueItem}>
+                <View
+                  key={issue.id}
+                  className={styles.issueItem}
+                  onClick={() => handleIssueClick(issue.id)}
+                >
                   <View className={styles.issueHeader}>
                     <View className={styles.issueIndex}>
                       <Text>{index + 1}</Text>

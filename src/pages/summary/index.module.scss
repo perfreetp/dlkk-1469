@@ -351,3 +351,293 @@
   color: $color-text-white;
   border: none;
 }
+
+.overviewList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.overviewCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.overviewHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+}
+
+.overviewOrgName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.unresolvedBadge {
+  background: $color-error-bg;
+  border-radius: $radius-md;
+  padding: 4rpx 16rpx;
+}
+
+.unresolvedText {
+  font-size: $font-size-xs;
+  color: $color-error;
+  font-weight: $font-weight-medium;
+}
+
+.overviewStats {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.overviewStatItem {
+  flex: 1;
+  text-align: center;
+  padding: $spacing-sm 0;
+  border-radius: $radius-md;
+  background: $color-bg-section;
+}
+
+.ovNumber {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  display: block;
+  line-height: 1.3;
+}
+
+.ovLabel {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+  display: block;
+}
+
+.ovPending {
+  .ovNumber { color: $color-error; }
+}
+
+.ovRectifying {
+  .ovNumber { color: $color-warning; }
+}
+
+.ovVerified {
+  .ovNumber { color: $color-success; }
+}
+
+.ovClosed {
+  .ovNumber { color: $color-text-tertiary; }
+}
+
+.issueItem {
+  display: flex;
+  flex-direction: column;
+  padding: $spacing-md;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-sm;
+}
+
+.issueHeader {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-sm;
+}
+
+.issueIndex {
+  width: 40rpx;
+  height: 40rpx;
+  background: $color-primary-bg;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+  flex-shrink: 0;
+}
+
+.issueInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.issueName {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  margin-bottom: 4rpx;
+}
+
+.issueMeta {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.issueLocation {
+  font-size: $font-size-xs;
+  color: $color-primary;
+}
+
+.issueDesc {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  line-height: 1.5;
+  margin-bottom: $spacing-xs;
+}
+
+.issueFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.deadline {
+  font-size: $font-size-xs;
+  color: $color-warning;
+}
+
+.statsGrid {
+  display: flex;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.statCard {
+  flex: 1;
+  text-align: center;
+  padding: $spacing-md 0;
+  border-radius: $radius-lg;
+  background: $color-bg-card;
+  box-shadow: $shadow-card;
+
+  &.pass .statNumber { color: $color-success; }
+  &.rectify .statNumber { color: $color-warning; }
+  &.fail .statNumber { color: $color-error; }
+  &.total .statNumber { color: $color-primary; }
+}
+
+.statNumber {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  line-height: 1.2;
+  margin-bottom: 4rpx;
+}
+
+.statLabel {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.progressLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  white-space: nowrap;
+}
+
+.progressBarOuter {
+  flex: 1;
+  height: 12rpx;
+  background: $color-bg-section;
+  border-radius: 6rpx;
+  overflow: hidden;
+}
+
+.progressBarInner {
+  height: 100%;
+  background: linear-gradient(90deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: 6rpx;
+  transition: width $transition-normal;
+}
+
+.progressText {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
+}
+
+.categoryStats {
+  display: flex;
+  gap: $spacing-xs;
+  flex-wrap: wrap;
+  margin-top: 4rpx;
+}
+
+.catPass {
+  font-size: 20rpx;
+  color: $color-success;
+}
+
+.catRectify {
+  font-size: 20rpx;
+  color: $color-warning;
+}
+
+.catFail {
+  font-size: 20rpx;
+  color: $color-error;
+}
+
+.catTotal {
+  font-size: 20rpx;
+  color: $color-text-tertiary;
+}
+
+.infoList {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.infoRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $spacing-sm 0;
+
+  &:not(:last-child) {
+    border-bottom: 1rpx solid $color-border-light;
+  }
+}
+
+.infoLabel {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.infoValue {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+}
+
+.section {
+  margin-bottom: $spacing-lg;
+}
+
+.resultText {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+  margin-bottom: $spacing-xs;
+  position: relative;
+  z-index: 1;
+}

@@ -17,7 +17,7 @@ const VerifyItemPage: React.FC = () => {
   const updateVerifyItem = useAppStore(state => state.updateVerifyItem)
   const addPhoto = useAppStore(state => state.addPhoto)
   const removePhoto = useAppStore(state => state.removePhoto)
-  const addIssue = useAppStore(state => state.addIssue)
+  const addIssue = useAppStore(state => state.upsertIssue)
 
   const task = tasks.find(t => t.id === taskId)
 

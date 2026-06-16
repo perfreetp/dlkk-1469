@@ -20,8 +20,8 @@ interface AppState {
   updateCheckPoint: (taskId: string, itemId: string, checkPointId: string, checked: boolean) => void
   addPhoto: (taskId: string, itemId: string, photo: string) => void
   removePhoto: (taskId: string, itemId: string, index: number) => void
-  addIssue: (taskId: string, issue: Omit<IssueItem, 'id' | 'createdAt' | 'handler'>) => void
-  updateIssueStatus: (issueId: string, status: IssueItem['status']) => void
+  upsertIssue: (taskId: string, issue: Omit<IssueItem, 'id' | 'createdAt' | 'handler'>) => void
+  updateIssue: (issueId: string, updates: Partial<IssueItem>) => void
   updateTaskStatus: (taskId: string, status: Task['status']) => void
   resetTaskVerifyData: (taskId: string) => void
 }
@@ -31,7 +31,12 @@ const initData = (): Record<string, TaskVerifyData> => {
   taskList.forEach(task => {
     const taskIssues = issueList
       .filter(issue => issue.taskId === task.id)
-      .map(issue => ({ ...issue, location: issue.location || '现场核查' }))
+      .map(issue => ({
+        ...issue,
+        location: issue.location || '现场核查',
+        rectifyPhotos: issue.rectifyPhotos || [],
+        rectifyNote: issue.rectifyNote || ''
+      }))
     data[task.id] = {
       categories: JSON.parse(JSON.stringify(defaultCategories)),
       issues: taskIssues
@@ -47,6 +52,15 @@ const recalcCategoryProgress = (categories: VerifyCategory[]) => {
     total: category.items.length
   }))
 }
+
+const nowStr = () =>
+  new Date().toLocaleString('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).replace(/\//g, '-')
 
 export const useAppStore = create<AppState>()(
   persist(
@@ -147,51 +161,66 @@ export const useAppStore = create<AppState>()(
         }
       }),
 
-      addIssue: (taskId, issue) => set(state => {
-        const tasks = state.tasks
-        const newIssue: IssueItem = {
-          ...issue,
-          id: `issue_${Date.now()}`,
-          createdAt: new Date().toLocaleString('zh-CN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-          }).replace(/\//g, '-'),
-          handler: '李协管员'
-        }
-
-        const updatedTasks = tasks.map(t =>
-          t.id === taskId && t.status === 'completed'
-            ? { ...t, status: 'rectify' as const }
-            : t
-        )
-
+      upsertIssue: (taskId, issue) => set(state => {
         const taskData = state.taskVerifyData[taskId] || {
           categories: JSON.parse(JSON.stringify(defaultCategories)),
           issues: []
         }
 
+        const existing = taskData.issues.find(
+          i => i.taskId === issue.taskId && i.itemName === issue.itemName
+        )
+
+        let newIssues: IssueItem[]
+
+        if (existing) {
+          newIssues = taskData.issues.map(i =>
+            i.id === existing.id
+              ? {
+                  ...i,
+                  location: issue.location || i.location,
+                  description: issue.description || i.description,
+                  severity: issue.severity || i.severity,
+                  rectifyDeadline: issue.rectifyDeadline || i.rectifyDeadline,
+                  photoUrl: issue.photoUrl || i.photoUrl,
+                  status: 'pending' as const
+                }
+              : i
+          )
+        } else {
+          const newIssue: IssueItem = {
+            ...issue,
+            id: `issue_${Date.now()}`,
+            createdAt: nowStr(),
+            handler: '李协管员',
+            rectifyPhotos: [],
+            rectifyNote: ''
+          }
+          newIssues = [...taskData.issues, newIssue]
+        }
+
+        const updatedTasks = state.tasks.map(t =>
+          t.id === taskId && t.status === 'completed'
+            ? { ...t, status: 'rectify' as const }
+            : t
+        )
+
         return {
           tasks: updatedTasks,
           taskVerifyData: {
             ...state.taskVerifyData,
-            [taskId]: {
-              ...taskData,
-              issues: [...taskData.issues, newIssue]
-            }
+            [taskId]: { ...taskData, issues: newIssues }
           }
         }
       }),
 
-      updateIssueStatus: (issueId, status) => set(state => {
+      updateIssue: (issueId, updates) => set(state => {
         const newTaskVerifyData = { ...state.taskVerifyData }
         Object.keys(newTaskVerifyData).forEach(taskId => {
           newTaskVerifyData[taskId] = {
             ...newTaskVerifyData[taskId],
             issues: newTaskVerifyData[taskId].issues.map(issue =>
-              issue.id === issueId ? { ...issue, status } : issue
+              issue.id === issueId ? { ...issue, ...updates } : issue
             )
           }
         })
@@ -211,13 +240,18 @@ export const useAppStore = create<AppState>()(
             categories: JSON.parse(JSON.stringify(defaultCategories)),
             issues: issueList
               .filter(issue => issue.taskId === taskId)
-              .map(issue => ({ ...issue, location: issue.location || '现场核查' }))
+              .map(issue => ({
+                ...issue,
+                location: issue.location || '现场核查',
+                rectifyPhotos: issue.rectifyPhotos || [],
+                rectifyNote: issue.rectifyNote || ''
+              }))
           }
         }
       }))
     }),
     {
-      name: 'medical-verify-storage-v2'
+      name: 'medical-verify-storage-v3'
     }
   )
 )

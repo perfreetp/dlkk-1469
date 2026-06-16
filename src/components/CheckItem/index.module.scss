@@ -1,0 +1,53 @@
+@use '@/styles/variables.scss' as *;
+
+.checkItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md 0;
+  border-bottom: 1rpx solid $color-border-light;
+  transition: background $transition-fast;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:active {
+    background: $color-bg-hover;
+  }
+}
+
+.itemInfo {
+  flex: 1;
+  min-width: 0;
+  padding-right: $spacing-sm;
+}
+
+.itemName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: 4rpx;
+  @include text-ellipsis;
+}
+
+.itemDesc {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+  @include text-ellipsis;
+}
+
+.itemRight {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex-shrink: 0;
+}
+
+.arrow {
+  font-size: 32rpx;
+  color: $color-text-tertiary;
+  font-weight: $font-weight-light;
+}

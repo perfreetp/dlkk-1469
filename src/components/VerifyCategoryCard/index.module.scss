@@ -1,0 +1,91 @@
+@use '@/styles/variables.scss' as *;
+
+.categoryCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.99);
+  }
+
+  &.expanded {
+    box-shadow: $shadow-card-hover;
+  }
+}
+
+.cardInner {
+  display: flex;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.iconWrap {
+  width: 80rpx;
+  height: 80rpx;
+  background: $color-primary-bg;
+  border-radius: $radius-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: $spacing-md;
+  flex-shrink: 0;
+}
+
+.icon {
+  font-size: 40rpx;
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: 4rpx;
+  display: block;
+}
+
+.progressText {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+}
+
+.arrow {
+  flex-shrink: 0;
+  margin-left: $spacing-sm;
+}
+
+.arrowIcon {
+  font-size: 36rpx;
+  color: $color-text-tertiary;
+  transition: transform $transition-base;
+  display: block;
+
+  &.up {
+    transform: rotate(-90deg);
+  }
+}
+
+.progressBar {
+  height: 8rpx;
+  background: $color-bg-section;
+  border-radius: $radius-round;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-round;
+  transition: width $transition-base;
+
+  &.allDone {
+    background: linear-gradient(90deg, $color-success 0%, #23c349 100%);
+  }
+}

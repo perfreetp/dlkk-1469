@@ -1,0 +1,81 @@
+@use '@/styles/variables.scss' as *;
+
+.statusTag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 $spacing-sm;
+  border-radius: $radius-sm;
+  white-space: nowrap;
+
+  .text {
+    font-size: $font-size-xs;
+    font-weight: $font-weight-medium;
+  }
+
+  &.sm {
+    height: 36rpx;
+    .text {
+      font-size: 20rpx;
+    }
+  }
+
+  &.md {
+    height: 48rpx;
+    padding: 0 $spacing-md;
+    border-radius: $radius-md;
+    .text {
+      font-size: $font-size-sm;
+    }
+  }
+}
+
+.pending {
+  background-color: $color-warning-bg;
+  color: $color-warning;
+}
+
+.ongoing {
+  background-color: $color-primary-bg;
+  color: $color-primary;
+}
+
+.completed {
+  background-color: $color-success-bg;
+  color: $color-success;
+}
+
+.pass {
+  background-color: $color-success-bg;
+  color: $color-success;
+}
+
+.fail {
+  background-color: $color-error-bg;
+  color: $color-error;
+}
+
+.rectify {
+  background-color: $color-warning-bg;
+  color: $color-warning;
+}
+
+.major {
+  background-color: $color-error-bg;
+  color: $color-error;
+}
+
+.minor {
+  background-color: $color-warning-bg;
+  color: $color-warning;
+}
+
+.verified {
+  background-color: $color-success-bg;
+  color: $color-success;
+}
+
+.closed {
+  background-color: rgba(134, 144, 156, 0.1);
+  color: $color-text-tertiary;
+}

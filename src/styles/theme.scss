@@ -1,0 +1,43 @@
+// ============================================
+// 主题配色变量 - 医疗机构实地核验 App
+// ============================================
+
+// 品牌主题色（政务蓝 - 专业可靠）
+$color-primary: #165dff;
+$color-primary-light: #4080ff;
+$color-primary-dark: #0e42d2;
+$color-primary-bg: rgba(22, 93, 255, 0.08);
+$color-primary-bg-light: rgba(22, 93, 255, 0.04);
+
+// 功能色
+$color-success: #00b42a;
+$color-success-bg: rgba(0, 180, 42, 0.08);
+$color-warning: #ff7d00;
+$color-warning-bg: rgba(255, 125, 0, 0.08);
+$color-error: #f53f3f;
+$color-error-bg: rgba(245, 63, 63, 0.08);
+$color-info: #165dff;
+
+// 核验状态色
+$color-verified: #00b42a;      // 核验通过
+$color-pending: #ff7d00;       // 待核验
+$color-rejected: #f53f3f;      // 不通过
+$color-rectify: #ff7d00;       // 待整改
+
+// 背景色
+$color-bg-page: #f2f3f5;
+$color-bg-card: #ffffff;
+$color-bg-hover: #f7f8fa;
+$color-bg-section: #f7f8fa;
+
+// 文本色
+$color-text-primary: #1d2129;
+$color-text-secondary: #4e5969;
+$color-text-tertiary: #86909c;
+$color-text-disabled: #c9cdd4;
+$color-text-white: #ffffff;
+
+// 边框色
+$color-border: #e5e6eb;
+$color-border-light: #f2f3f5;
+$color-divider: #f2f3f5;

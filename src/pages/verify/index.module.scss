@@ -1,0 +1,175 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  min-height: 100vh;
+  background: $color-bg-page;
+  padding-bottom: 160rpx;
+}
+
+.currentOrg {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  padding: $spacing-lg $page-padding;
+  color: $color-text-white;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -80rpx;
+    right: -60rpx;
+    width: 240rpx;
+    height: 240rpx;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+  }
+}
+
+.orgHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: $spacing-md;
+  position: relative;
+  z-index: 1;
+}
+
+.orgName {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  flex: 1;
+  margin-right: $spacing-md;
+  display: block;
+}
+
+.orgType {
+  font-size: $font-size-xs;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 6rpx $spacing-sm;
+  border-radius: $radius-sm;
+  flex-shrink: 0;
+}
+
+.progressSection {
+  position: relative;
+  z-index: 1;
+}
+
+.progressLabel {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: $spacing-sm;
+  font-size: $font-size-sm;
+  opacity: 0.9;
+}
+
+.progressBar {
+  height: 16rpx;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: $radius-round;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: $color-text-white;
+  border-radius: $radius-round;
+  transition: width $transition-base;
+}
+
+.content {
+  padding: $spacing-md $page-padding;
+}
+
+.categoryList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.expandedSection {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: 0 $spacing-lg;
+  margin-top: -$spacing-sm;
+  box-shadow: $shadow-card;
+  border-top: 1rpx solid $color-border-light;
+}
+
+.sectionTitle {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  padding: $spacing-md 0 $spacing-sm;
+  font-weight: $font-weight-medium;
+}
+
+.bottomBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: $color-bg-card;
+  padding: $spacing-md $page-padding;
+  padding-bottom: calc(#{$spacing-md} + env(safe-area-inset-bottom));
+  box-shadow: 0 -4rpx 16rpx rgba(0, 0, 0, 0.06);
+  display: flex;
+  gap: $spacing-md;
+  z-index: 100;
+}
+
+.btn {
+  @include button-reset;
+  flex: 1;
+  height: $button-height-lg;
+  border-radius: $radius-button;
+  font-size: $font-size-md;
+  font-weight: $font-weight-medium;
+  transition: all $transition-fast;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.btnOutline {
+  background: $color-bg-card;
+  color: $color-primary;
+  border: 2rpx solid $color-primary;
+}
+
+.btnPrimary {
+  background: linear-gradient(135deg, $color-primary 0%, $color-primary-light 100%);
+  color: $color-text-white;
+  border: none;
+}
+
+.btnDisabled {
+  background: $color-bg-section;
+  color: $color-text-disabled;
+  border: none;
+}
+
+.emptyState {
+  padding: 120rpx $page-padding;
+  text-align: center;
+
+  .emptyIcon {
+    font-size: 100rpx;
+    margin-bottom: $spacing-md;
+  }
+
+  .emptyTitle {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    margin-bottom: $spacing-sm;
+    display: block;
+  }
+
+  .emptyDesc {
+    font-size: $font-size-sm;
+    color: $color-text-tertiary;
+    line-height: 1.6;
+  }
+}
